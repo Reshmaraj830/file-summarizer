@@ -1,0 +1,175 @@
+{
+  "name": "Smart Daily Report Aggregator",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "18frXW-QQLaHsXm7Y2C4Or4iv0XOBR89ayrxt5VJf0CQ",
+          "mode": "list",
+          "cachedResultName": "Daily DT Playhouse Reporte",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18frXW-QQLaHsXm7Y2C4Or4iv0XOBR89ayrxt5VJf0CQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1919642548,
+          "mode": "list",
+          "cachedResultName": "Form Responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18frXW-QQLaHsXm7Y2C4Or4iv0XOBR89ayrxt5VJf0CQ/edit#gid=1919642548"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -760,
+        -80
+      ],
+      "id": "4b8233e7-0003-43da-9491-c08dc454259b",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "UWDwEpGmcoOCTRrX",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an AI assistant that generates professional summary emails to management from a team lead.\n\nPlease generate a formal and clear daily report email for the date 10/06/2025. The report must be easy to read in standard email clients, without using markdown or HTML tables.\n\nStructure the report like this:\n\n1. Start with a subject line: \"Daily Work Update – 10/06/2025\"\n2. Address the management professionally.\n3. Summarize the number of people in each category: Completed, Blocked, Planned.\n4. Clearly list the names under each category with bullet points.\n\nHere is the data:\n{{ $json.markdownText }}\n\n\nMake the formatting very clear and human-readable for email. Use simple text lists and no markdown or tables.\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -380,
+        -100
+      ],
+      "id": "1b7e877e-3858-476a-93a3-671f360c5719",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-flash-8b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -360,
+        140
+      ],
+      "id": "828c82b1-ee9f-413a-a10b-92cd1e32ae15",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "cONMJPhLEVpKDR4Q",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "reshmaraj830@gmail.com",
+        "subject": "Daily Team Update",
+        "emailType": "text",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -60,
+        100
+      ],
+      "id": "0063acae-0c1c-4b3c-9772-b168a25a128c",
+      "name": "Gmail",
+      "webhookId": "bc9237fd-b581-4457-a4cc-dbc069ed1c2e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "NQlI7z48CCXu2jos",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all().map((item) => item.json);\n\n// Get the keys from the first object to use as headers\nconst headers = Object.keys(items[0]);\n\n// Create the header row\nlet markdownText = headers.join(\" | \") + \"\\n\";\n\n// Create the separator row\nmarkdownText += headers.map(() => \"---\").join(\" | \") + \"\\n\";\n\n// Create each data row\nitems.forEach((item) => {\n  const row = headers.map((header) => item[header]).join(\" | \");\n  markdownText += row + \"\\n\";\n});\n\nreturn { markdownText };\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -600,
+        140
+      ],
+      "id": "3eb809a9-e2e0-4724-901a-d53d472f60c0",
+      "name": "Code"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "5873df2d-f4cb-4feb-adc0-5f5b19b90339",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6737c4fa1ed5beee4a74d8d34b0b55ddf5d9ffae0991202e573322617fbddc4f"
+  },
+  "id": "82dPvE9ecMqpU134",
+  "tags": []
+}
